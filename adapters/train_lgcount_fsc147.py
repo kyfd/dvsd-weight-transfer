@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
+import sys
+import types
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -12,6 +15,12 @@ import numpy as np
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning import Trainer, seed_everything
+
+# The official entry point imports Gradio but never uses it in training or
+# evaluation.  Avoid installing the unrelated web UI dependency on the compute
+# node while leaving all model and optimization code unchanged.
+if importlib.util.find_spec("gradio") is None:
+    sys.modules["gradio"] = types.ModuleType("gradio")
 
 from run import Model, get_args_parser
 from util.FSC147 import FSC147
@@ -63,7 +72,7 @@ def main() -> None:
         filename="{epoch}-{val_mae:.4f}",
         every_n_epochs=1,
     )
-    logger = pl.loggers.TensorBoardLogger(args.output_dir, name=args.exp_name)
+    logger = pl.loggers.CSVLogger(args.output_dir, name=args.exp_name)
     model = Model(args, all_classes=train_set.all_classes)
     trainer = Trainer(
         accelerator="gpu",

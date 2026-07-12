@@ -4,16 +4,25 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import math
 import os
+import sys
 import time
+import types
 from pathlib import Path
 
 import numpy as np
 import torch
 from PIL import Image
 from torchvision import transforms
+
+# The released entry point imports Gradio although its training and test paths
+# never reference it.  Keep the inference environment minimal without changing
+# any counting code.
+if importlib.util.find_spec("gradio") is None:
+    sys.modules["gradio"] = types.ModuleType("gradio")
 
 import util.misc as misc
 from run import Model, get_args_parser
