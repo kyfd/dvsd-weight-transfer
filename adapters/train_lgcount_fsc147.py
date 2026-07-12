@@ -26,7 +26,7 @@ from run import Model, get_args_parser
 from util.FSC147 import FSC147
 
 
-def _compat_lr_scheduler_step(self, scheduler, metric) -> None:
+def _compat_lr_scheduler_step(self, scheduler, optimizer_idx, metric) -> None:
     """Preserve the official StepLR behavior under PyTorch 2.x/PL 1.8."""
     scheduler.step()
 
