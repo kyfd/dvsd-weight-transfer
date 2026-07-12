@@ -145,9 +145,17 @@ def main() -> None:
     checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     state = checkpoint["model"] if isinstance(checkpoint, dict) and "model" in checkpoint else checkpoint
     incompat = model.load_state_dict(clean_state_dict(state), strict=False)
-    if incompat.missing_keys or incompat.unexpected_keys:
+    # The released final checkpoint retains a training-only feature-map encoder
+    # that the official FSC-147 inference graph does not instantiate.  The
+    # official entry point also loads with strict=False; accept exactly those
+    # surplus keys while keeping every inference-graph mismatch fatal.
+    unexpected = [
+        key for key in incompat.unexpected_keys
+        if not key.startswith("feature_map_encoder.")
+    ]
+    if incompat.missing_keys or unexpected:
         raise RuntimeError(
-            f"Checkpoint mismatch: missing={incompat.missing_keys}, unexpected={incompat.unexpected_keys}"
+            f"Checkpoint mismatch: missing={incompat.missing_keys}, unexpected={unexpected}"
         )
     model.cuda().eval()
 
