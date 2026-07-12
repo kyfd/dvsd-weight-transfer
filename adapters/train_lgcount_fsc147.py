@@ -26,6 +26,18 @@ from run import Model, get_args_parser
 from util.FSC147 import FSC147
 
 
+def _compat_lr_scheduler_step(self, scheduler, metric) -> None:
+    """Preserve the official StepLR behavior under PyTorch 2.x/PL 1.8."""
+    scheduler.step()
+
+
+# PyTorch 2.x moved StepLR to the public LRScheduler base class, while
+# Lightning 1.8 checks the removed private base class.  Declaring the standard
+# hook bypasses only that stale type check and keeps one scheduler step per
+# epoch, exactly as in the released training code.
+Model.lr_scheduler_step = _compat_lr_scheduler_step
+
+
 def parse_args() -> Tuple[argparse.Namespace, Optional[Path], Path]:
     parser = get_args_parser()
     parser.add_argument("--resume-latest", type=Path, default=None)
