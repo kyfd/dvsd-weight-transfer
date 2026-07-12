@@ -84,7 +84,7 @@ def main() -> None:
         filename="{epoch}-{val_mae:.4f}",
         every_n_epochs=1,
     )
-    logger = pl.loggers.CSVLogger(args.output_dir, name=args.exp_name)
+    logger = pl.loggers.TensorBoardLogger(args.output_dir, name=args.exp_name)
     model = Model(args, all_classes=train_set.all_classes)
     trainer = Trainer(
         accelerator="gpu",
